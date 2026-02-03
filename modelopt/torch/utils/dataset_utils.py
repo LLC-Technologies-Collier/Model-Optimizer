@@ -119,7 +119,7 @@ def _third_party_get_dataset_samples(
     for text: no tokenization is done and plain text is still returned.
     """
     warn(
-        f"Loading third-party datset {dataset_name} with the split `train`, as the dataset is not registered in {get_supported_datasets()}."
+        f"Loading third-party dataset {dataset_name} with the split `train`, as the dataset is not registered in {get_supported_datasets()}."
     )
     from datasets import load_dataset
 
