@@ -151,12 +151,12 @@ def _third_party_get_dataset_samples(
                 kwargs["tools"] = tools
             if not messages:
                 raise ValueError(
-                    f"Column {i} in dataset {dataset_name} has no messages, or a empty messages."
+                    f"Row {i} in dataset {dataset_name} has no messages, or a empty messages."
                 )
             text: str = tokenizer.apply_chat_template(messages, **kwargs, tokenize=False)
             if len(text) == 0:
                 raise ValueError(
-                    f"Column {i} in dataset {dataset_name} has empty text after applying chat template."
+                    f"Row {i} in dataset {dataset_name} has empty text after applying chat template."
                 )
             texts.append(text)
     elif "prompt" in dataset.column_names:
@@ -166,7 +166,7 @@ def _third_party_get_dataset_samples(
     else:
         raise NotImplementedError(
             f"Dataset {dataset_name} is not supported. Please use one of the following: {get_supported_datasets()}. "
-            " For supporting thrid-party datasets, your dataset must have either a `messages` or `prompt` column, and a `train` split."
+            " For supporting third-party datasets, your dataset must have either a `messages` or `prompt` column, and a `train` split."
             " For example the `baseten/quant_calibration_dataset_v1` dataset has a `messages` column and a `train` split."
         )
 
