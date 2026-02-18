@@ -17,6 +17,44 @@
 
 from __future__ import annotations
 
+# --- c9h Global Mock Block ---
+import torch
+import torch.nn as nn
+try:
+    from torch.distributed.fsdp import FSDPModule
+except ImportError:
+    class FSDPModule: pass
+
+try:
+    from torch.distributed.fsdp import MixedPrecisionPolicy
+except ImportError:
+    try:
+        from torch.distributed.fsdp import MixedPrecision as MixedPrecisionPolicy
+    except ImportError:
+        class MixedPrecisionPolicy: pass
+
+try:
+    from torch.distributed.fsdp import fully_shard
+except ImportError:
+    def fully_shard(module, **kwargs): return module
+
+try:
+    from torch.distributed.fsdp._fully_shard._fsdp_param import FSDPParam
+except ImportError:
+    class FSDPParam: pass
+
+try:
+    from torch.distributed.tensor import DTensor, Replicate, DeviceMesh, Shard
+except ImportError:
+    try:
+        from torch.distributed._tensor import DTensor, Replicate, DeviceMesh, Shard
+    except ImportError:
+        class DTensor: pass
+        class Replicate: pass
+        class DeviceMesh: pass
+        class Shard: pass
+# -----------------------------
+
 from collections import namedtuple
 from contextlib import ExitStack, contextmanager, nullcontext
 from typing import TYPE_CHECKING, Any
@@ -24,9 +62,9 @@ from typing import TYPE_CHECKING, Any
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributed.fsdp import FSDPModule, MixedPrecisionPolicy, fully_shard
-from torch.distributed.fsdp._fully_shard._fsdp_param import FSDPParam
-from torch.distributed.tensor import Replicate
+# from torch.distributed.fsdp import FSDPModule, MixedPrecisionPolicy, fully_shard
+# from torch.distributed.fsdp._fully_shard._fsdp_param import FSDPParam
+# from torch.distributed.tensor import Replicate
 
 from modelopt.torch.utils import get_unwrapped_name, print_rank_0
 

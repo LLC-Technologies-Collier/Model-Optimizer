@@ -1,3 +1,41 @@
+# --- c9h Global Mock Block ---
+import torch
+import torch.nn as nn
+try:
+    from torch.distributed.fsdp import FSDPModule
+except ImportError:
+    class FSDPModule: pass
+
+try:
+    from torch.distributed.fsdp import MixedPrecisionPolicy
+except ImportError:
+    try:
+        from torch.distributed.fsdp import MixedPrecision as MixedPrecisionPolicy
+    except ImportError:
+        class MixedPrecisionPolicy: pass
+
+try:
+    from torch.distributed.fsdp import fully_shard
+except ImportError:
+    def fully_shard(module, **kwargs): return module
+
+try:
+    from torch.distributed.fsdp._fully_shard._fsdp_param import FSDPParam
+except ImportError:
+    class FSDPParam: pass
+
+try:
+    from torch.distributed.tensor import DTensor, Replicate, DeviceMesh, Shard
+except ImportError:
+    try:
+        from torch.distributed._tensor import DTensor, Replicate, DeviceMesh, Shard
+    except ImportError:
+        class DTensor: pass
+        class Replicate: pass
+        class DeviceMesh: pass
+        class Shard: pass
+# -----------------------------
+
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -29,7 +67,6 @@ from typing import Any
 import torch
 import torch.nn as nn
 from safetensors.torch import save_file
-
 try:
     import diffusers
 
@@ -49,7 +86,7 @@ try:
 except ImportError:
     HAS_DIFFUSERS = False
 
-from torch.distributed.fsdp import FSDPModule
+# from torch.distributed.fsdp import FSDPModule
 
 from modelopt.torch.quantization import set_quantizer_by_cfg_context
 from modelopt.torch.quantization.nn import (
