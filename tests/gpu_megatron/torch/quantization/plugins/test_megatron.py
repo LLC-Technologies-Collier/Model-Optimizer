@@ -735,6 +735,39 @@ def test_te_grouped_vs_sequential_quantize(need_4_gpus):
     )
 
 
+def test_layer_sync_moe_local_experts_amax(moe_grouped_gemm):
+    initialize_for_megatron(
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=2,
+        expert_tensor_parallel_size=1,
+        seed=SEED,
+    )
+    model = _gpt_model_provider(
+        tp_size=1,
+        ep_size=2,
+        etp_size=1,
+        hidden_size=256,
+        moe_grouped_gemm=moe_grouped_gemm,
+        use_te=moe_grouped_gemm,
+        num_moe_experts=8,
+        transformer_impl="modelopt",
+    )
+    # model = mtq.quantize(model, mtq.FP8_DEFAULT_CFG, get_forward(model))
+    forward = get_forward(model)
+    forward()
+    print(model)
+
+    model.layer_sync_moe_local_experts_amax()
+    prev_amax = None
+    for expert in model.local_experts:
+        assert expert.input_quantizer.amax is not None
+        if prev_amax is None:
+            prev_amax = expert.input_quantizer.amax
+        else:
+            assert torch.allclose(prev_amax, expert.input_quantizer.amax)
+
+
 def _test_expert_model_parallel_amax_sync(
     tp_size, ep_size, etp_size, moe_grouped_gemm, config, rank, size
 ):
