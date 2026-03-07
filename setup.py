@@ -36,7 +36,7 @@ required_deps = [
     "pulp",
     "regex",
     "safetensors",
-    "torch>=2.6",
+    "torch>=2.4.1",
 ]
 
 optional_deps = {
