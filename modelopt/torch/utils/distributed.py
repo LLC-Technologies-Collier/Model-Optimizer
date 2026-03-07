@@ -29,7 +29,7 @@ from warnings import warn
 
 import torch
 import torch.distributed
-from torch.distributed.tensor import DTensor
+# from torch.distributed.tensor import DTensor
 
 __all__ = [
     "DistributedProcessGroup",

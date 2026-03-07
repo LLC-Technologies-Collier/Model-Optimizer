@@ -57,7 +57,12 @@ def load_cpp_extension(
     if not os.environ.get("TORCH_CUDA_ARCH_LIST"):
         try:
             device_capability = torch.cuda.get_device_capability()
-            os.environ["TORCH_CUDA_ARCH_LIST"] = f"{device_capability[0]}.{device_capability[1]}"
+            # Patch for Blackwell: Ensure 11.0 is handled as 110
+            arch_str = f"{device_capability[0]}.{device_capability[1]}"
+            if arch_str == "11.0":
+                os.environ["TORCH_CUDA_ARCH_LIST"] = "11.0"
+            else:
+                os.environ["TORCH_CUDA_ARCH_LIST"] = arch_str
         except Exception:
             warnings.warn("GPU not detected. Please unset `TORCH_CUDA_ARCH_LIST` env variable.")
 
