@@ -237,6 +237,15 @@ def torch_to_tensorrt_llm_checkpoint(
             vocab_size=vocab_size,
         )
 
+        # Set token IDs if available in the model config
+        if hasattr(model, "config"):
+            (
+                config.decoder_start_token_id,
+                config.eos_token_id,
+                config.bos_token_id,
+                config.pad_token_id,
+            ) = get_enc_dec_token_ids(model)
+
         # For Encoder-Decoder Model
         if is_enc_dec:
             config.enc_dec = component_name
@@ -337,12 +346,6 @@ def torch_to_tensorrt_llm_checkpoint(
             config.encoder_hidden_size, config.encoder_num_heads, config.encoder_head_size = (
                 get_encoder_config(models[0][1].config)
             )
-            (
-                config.decoder_start_token_id,
-                config.eos_token_id,
-                config.bos_token_id,
-                config.pad_token_id,
-            ) = get_enc_dec_token_ids(models[1][1].config)
 
         # For the training time PP, not all ranks will have the lm_head layer.
         if config.lm_head is None:

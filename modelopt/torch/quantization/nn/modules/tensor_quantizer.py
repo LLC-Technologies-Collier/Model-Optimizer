@@ -802,6 +802,8 @@ class TensorQuantizer(nn.Module):
         amax = None
         if not self.is_mx_format:
             amax = self._get_amax(inputs)
+            if amax is not None and torch.is_tensor(amax):
+                amax = amax.to(inputs.device)
 
         if self.block_sizes is not None and self.block_sizes.get("type", "static") == "dynamic":
             # Dynamic block quantization

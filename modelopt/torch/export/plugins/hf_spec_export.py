@@ -301,6 +301,11 @@ def export_spec_ckpt_config(model: nn.Module):
             return getattr(model.eagle_config, key)
         elif getattr(model.config, key, None) is not None:
             return getattr(model.config, key)
+        elif (
+            hasattr(model, "generation_config")
+            and getattr(model.generation_config, key, None) is not None
+        ):
+            return getattr(model.generation_config, key)
         else:
             return None
 

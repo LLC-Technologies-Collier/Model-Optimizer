@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 MODEL_NAME_TO_HF_ARCH_MAP = {
     "llama": "LlamaForCausalLM",
     "gemma": "GemmaForCausalLM",
+    "gemma2": "Gemma2ForCausalLM",
     "gemma3": "Gemma3ForCausalLM",
     "gpt": "GPTForCausalLM",
     "enc": "EncoderModel",
@@ -240,8 +241,15 @@ def convert_to_tensorrt_llm_config(
     layernorm_type_map = {i.name: i.value for i in LayerNormType}
     layernorm_position_map = {i.name: i.value for i in LayerNormPositionType}
 
-    if decoder_type in ["gpt", "gemma", "llama"]:
-        pass
+    if decoder_type in ["gpt", "gemma", "gemma2", "gemma3", "llama"]:
+        if decoder_type in ["gemma2", "gemma3"]:
+            config.update(
+                {
+                    "attn_logit_softcapping": model_config.layers[0].attn_logit_softcapping,
+                    "final_logit_softcapping": model_config.layers[0].final_logit_softcapping,
+                    "query_pre_attn_scalar": model_config.layers[0].query_pre_attn_scalar,
+                }
+            )
     elif decoder_type == "mpt":
         config.update(
             {
@@ -318,10 +326,6 @@ def convert_to_tensorrt_llm_config(
             config["encoder_hidden_size"] = model_config.encoder_hidden_size
             config["encoder_num_heads"] = model_config.encoder_num_heads
             config["encoder_head_size"] = model_config.encoder_head_size
-            config["decoder_start_token_id"] = model_config.decoder_start_token_id
-            config["eos_token_id"] = model_config.eos_token_id
-            config["bos_token_id"] = model_config.bos_token_id
-            config["pad_token_id"] = model_config.pad_token_id
     elif decoder_type == "dbrx":
         config["clip_qkv"] = first_attention_decoder_config.clip_qkv
 
@@ -348,6 +352,16 @@ def convert_to_tensorrt_llm_config(
             "It's not supported by TensorRT-LLM yet. Please try exporting the model to unified HF "
             "checkpoint with ModelOpt and deploy the checkpoint with TensorRT-LLM pytorch backend."
         )
+
+    # Common token IDs for all model types if available
+    if model_config.eos_token_id is not None:
+        config["eos_token_id"] = model_config.eos_token_id
+    if model_config.bos_token_id is not None:
+        config["bos_token_id"] = model_config.bos_token_id
+    if model_config.pad_token_id is not None:
+        config["pad_token_id"] = model_config.pad_token_id
+    if model_config.decoder_start_token_id is not None:
+        config["decoder_start_token_id"] = model_config.decoder_start_token_id
 
     # For Mixtral and Arctic
     if first_attention_decoder_config.moe_num_experts:

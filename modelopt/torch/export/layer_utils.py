@@ -1898,12 +1898,19 @@ def get_encoder_config(encoder_config):
 
 def get_enc_dec_token_ids(decoder_config):
     """Parse decoder model token info."""
-    decoder_start_token_id = (
-        decoder_config.decoder_start_token_id
-        if hasattr(decoder_config, "decoder_start_token_id")
-        else None
-    )
-    eos_token_id = decoder_config.eos_token_id if hasattr(decoder_config, "eos_token_id") else None
-    bos_token_id = decoder_config.bos_token_id if hasattr(decoder_config, "bos_token_id") else None
-    pad_token_id = decoder_config.pad_token_id if hasattr(decoder_config, "pad_token_id") else None
+
+    def get_attr(obj, attr):
+        # Try finding the attribute in the object itself, or its config/generation_config attributes
+        for target in [obj, getattr(obj, "config", None), getattr(obj, "generation_config", None)]:
+            if target is not None:
+                val = getattr(target, attr, None)
+                if val is not None:
+                    return val
+        return None
+
+    decoder_start_token_id = get_attr(decoder_config, "decoder_start_token_id")
+    eos_token_id = get_attr(decoder_config, "eos_token_id")
+    bos_token_id = get_attr(decoder_config, "bos_token_id")
+    pad_token_id = get_attr(decoder_config, "pad_token_id")
+
     return decoder_start_token_id, eos_token_id, bos_token_id, pad_token_id

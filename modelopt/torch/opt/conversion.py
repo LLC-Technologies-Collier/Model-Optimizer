@@ -552,9 +552,20 @@ def restore_from_modelopt_state(model: ModelLike, modelopt_state: dict[str, Any]
     model = model if isinstance(model, nn.Module) else ModelLikeModule(model)
 
     # initialize state manager and load state
+    # Edge-LLM: Handle list vs dict and key drift in modelopt_state
+    actual_state = modelopt_state
+    if isinstance(modelopt_state, list):
+        for item in modelopt_state:
+            if isinstance(item, dict) and ("modelopt_state_dict" in item or "modelopt_state" in item):
+                actual_state = item["modelopt_state"] if "modelopt_state" in item else item
+                break
+    
+    if "modelopt_state" in actual_state and isinstance(actual_state["modelopt_state"], dict):
+        actual_state = actual_state["modelopt_state"]
+
     manager = ModeloptStateManager(model=model, init_state=True)
     manager.load_state_dict(
-        modelopt_state["modelopt_state_dict"], modelopt_state["modelopt_version"]
+        actual_state["modelopt_state_dict"], actual_state["modelopt_version"]
     )
 
     # apply restore entrypoints for each of the modes
@@ -602,10 +613,33 @@ def restore(model: ModelLike, f: str | os.PathLike | BinaryIO, **kwargs) -> nn.M
     objs = torch.load(f, **kwargs)
 
     # restore model architecture
-    model_restored = restore_from_modelopt_state(model, objs["modelopt_state"])
+    modelopt_state = None
+    if isinstance(objs, dict):
+        if "modelopt_state" in objs:
+            modelopt_state = objs["modelopt_state"]
+        elif "modelopt_state_dict" in objs:
+            modelopt_state = objs
+    elif isinstance(objs, list):
+        # Search the list for a dictionary containing the state keys
+        for item in objs:
+            if isinstance(item, dict) and ("modelopt_state_dict" in item or "modelopt_state" in item):
+                modelopt_state = item["modelopt_state"] if "modelopt_state" in item else item
+                break
 
-    # load weights from checkpoint
-    model_restored.load_state_dict(objs["model_state_dict"])
+    if modelopt_state is None:
+        keys_info = str(list(objs.keys())) if isinstance(objs, dict) else f"list of length {len(objs)}"
+        raise KeyError(f"Could not find ModelOpt state in checkpoint. Content: {keys_info}")
+        
+    model_restored = restore_from_modelopt_state(model, modelopt_state)
+
+    # load weights from checkpoint if available
+    if "model_state_dict" in objs:
+        model_restored.load_state_dict(objs["model_state_dict"])
+    elif "state_dict" in objs:
+        model_restored.load_state_dict(objs["state_dict"])
+    else:
+        # If no weights in checkpoint, we keep the weights already in the model
+        pass
 
     # it cannot be a ModelLikeModule anymore at the end
     assert not isinstance(model_restored, ModelLikeModule), "Model must be a regular Module now!"
