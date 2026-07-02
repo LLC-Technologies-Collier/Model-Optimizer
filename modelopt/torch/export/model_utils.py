@@ -33,6 +33,7 @@ MODEL_NAME_TO_TYPE = {
     "Qwen3Next": "qwen3next",
     "QWen": "qwen",
     "RecurrentGemma": "recurrentgemma",
+    "Gemma4": "gemma4",
     "Gemma3": "gemma3",
     "Gemma2": "gemma2",
     "Gemma": "gemma",
