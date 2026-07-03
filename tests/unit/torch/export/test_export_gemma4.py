@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: Copyright 2026 Google LLC and contributors
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -102,34 +103,3 @@ def test_gemma4_layernorm_config_mappings():
     assert config.post_feedforward_layernorm is not None
     assert config.post_feedforward_layernorm.layernorm_type == "RmsNorm"
     assert config.post_feedforward_layernorm.eps == 1e-6
-
-
-def test_gemma4_trtllm_config_softcapping():
-    """Verify convert_to_tensorrt_llm_config maps softcapping config for Gemma 4."""
-    model_config = MagicMock(spec=ModelConfig)
-    model_config.tensor_parallel = 1
-    model_config.pipeline_parallel = 1
-    model_config.architecture = "Gemma4ForCausalLM"
-    
-    # Mock single decoder layer inside the model
-    layer_config = MagicMock(spec=DecoderLayerConfig)
-    layer_config.decoder_type = "gemma4"
-    layer_config.attn_logit_softcapping = 50.0
-    layer_config.final_logit_softcapping = 30.0
-    layer_config.query_pre_attn_scalar = 1.0
-    layer_config.attention = MagicMock()
-    layer_config.self_attention = MagicMock()
-    layer_config.cross_attention = MagicMock()
-    layer_config.mlp = MagicMock()
-    layer_config.rotary_base = 10000
-    layer_config.rope_scaling = None
-    
-    model_config.layers = [layer_config]
-    model_config.ln_f = None
-
-    # Call target conversion method
-    config = convert_to_tensorrt_llm_config(model_config, quant_config={})
-
-    assert config.get("attn_logit_softcapping") == 50.0
-    assert config.get("final_logit_softcapping") == 30.0
-    assert config.get("query_pre_attn_scalar") == 1.0

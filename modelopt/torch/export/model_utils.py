@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: Copyright 2026 Google LLC and contributors
 # SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
